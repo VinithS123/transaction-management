@@ -1,0 +1,623 @@
+openapi: "3.0.0"
+info:
+  title: Transaction, Dashboard, and Authentication API
+  version: "1.0.0"
+  description: API for Transactions, Dashboard Analytics, and User Sign-in/Login operations.
+
+tags:
+  - name: Transactions
+  - name: Dashboard
+  - name: Dashboard Analytics
+  - name: Authentication
+
+paths:
+
+  /api/v1/transactions:
+
+    post:
+      tags:
+        - Transactions
+      summary: Create new Transaction
+      operationId: addTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionDto'
+      responses:
+        '201':
+          description: successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionDto'
+        '400':
+          description: invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+        '401':
+          description: Unauthorized – handled by Spring Security
+        '403':
+          description: Forbidden – handled by Spring Security
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+
+    get:
+      tags:
+        - Transactions
+      summary: Get all transactions with filters, sorting, and pagination
+      operationId: getAllTransactions
+      parameters:
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+        - name: category
+          in: query
+          schema:
+            $ref: '#/components/schemas/Category'
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [recordDate, amount, createdAt]
+            default: recordDate
+        - name: sortDir
+          in: query
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: DESC
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Number of records per page
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionDto'
+        '401':
+          description: Unauthorized – handled by Spring Security
+        '403':
+          description: Forbidden – handled by Spring Security
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+
+  /api/v1/transactions/search:
+
+    get:
+      tags:
+        - Transactions
+      summary: Search transactions by keyword using filters and sorting
+      operationId: searchTransactions
+      parameters:
+        - name: keyword
+          in: query
+          description: Search Transaction
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Filter by transaction type
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+        - name: category
+          in: query
+          description: Filter by transaction category
+          schema:
+            $ref: '#/components/schemas/Category'
+        - name: startDate
+          in: query
+          description: Filter transactions from start date
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: Filter transactions up to end date
+          schema:
+            type: string
+            format: date
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [recordDate, amount, createdAt]
+            default: recordDate
+        - name: sortDir
+          in: query
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: DESC
+        - name: page
+          in: query
+          description: Page number (0-indexed)
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Number of records per page
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of transactions matching the search and filter criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionDto'
+        '400':
+          description: Bad Request (e.g., missing keyword or invalid date format)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+        '401':
+          description: Unauthorized – handled by Spring Security
+        '403':
+          description: Forbidden – handled by Spring Security
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+
+  /api/v1/transactions/{id}:
+
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+
+    get:
+      tags:
+        - Transactions
+      summary: Get a transaction by Id
+      operationId: getTransactionById
+      responses:
+        '200':
+          description: Transaction found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionDto'
+        '401':
+          description: Unauthorized – handled by Spring Security
+        '403':
+          description: Forbidden – handled by Spring Security
+        '404':
+          description: Transaction Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+
+    put:
+      tags:
+        - Transactions
+      summary: Update a transaction
+      operationId: editTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionDto'
+      responses:
+        '200':
+          description: Transaction Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionDto'
+        '400':
+          description: Invalid Transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+        '401':
+          description: Unauthorized – handled by Spring Security
+        '403':
+          description: Forbidden – handled by Spring Security
+        '404':
+          description: Transaction Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+
+    delete:
+      tags:
+        - Transactions
+      summary: Deleting a transaction
+      operationId: deleteTransaction
+      responses:
+        '204':
+          description: Deleted Transaction successfully
+        '401':
+          description: Unauthorized – handled by Spring Security
+        '403':
+          description: Forbidden – handled by Spring Security
+        '404':
+          description: Transaction Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+
+  /api/v1/dashboard/summary:
+    get:
+      tags:
+        - Dashboard
+      summary: Get Dashboard Summary
+      description: Returns total income, total expenses, and net balance
+      operationId: getDashboardSummary
+      responses:
+        '200':
+          description: Successfully got summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummaryDto'
+        '401':
+          description: Unauthorized – handled by Spring Security
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+
+  /api/v1/dashboard/recent:
+    get:
+      tags:
+        - Dashboard
+      summary: Get Recent Transaction
+      description: Gives five recent transaction
+      operationId: getRecentTransactions
+      responses:
+        '200':
+          description: Got Recent Transactions Successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionDto'
+        '401':
+          description: Unauthorized – handled by Spring Security
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+
+  /api/v1/dashboard/category:
+    get:
+      tags:
+        - Dashboard Analytics
+      summary: Get Expenses by Category
+      description: Gives total expenses grouped by category
+      operationId: getCategoryExpenditure
+      responses:
+        '200':
+          description: Got total expenses grouped by category Successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryExpenditure'
+        '401':
+          description: Unauthorized – handled by Spring Security
+        '403':
+          description: Forbidden – handled by Spring Security
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+
+  /api/v1/dashboard/monthly:
+    get:
+      tags:
+        - Dashboard Analytics
+      summary: Get Monthly Profit Trend
+      description: Gives profit for month
+      operationId: getMonthlyTrends
+      responses:
+        '200':
+          description: Got Monthly profit successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MonthlyTrend'
+        '401':
+          description: Unauthorized – handled by Spring Security
+        '403':
+          description: Forbidden – handled by Spring Security
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+
+  /api/v1/signin:
+    post:
+      summary: Register user
+      description: Creating new user
+      operationId: registerUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /api/v1/login:
+    post:
+      summary: Login user
+      description: Authenticating the user
+      operationId: loginUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+
+components:
+
+  schemas:
+
+    TransactionType:
+      type: string
+      enum:
+        - INCOME
+        - EXPENSE
+
+    Category:
+      type: string
+      enum:
+        - SALARY
+        - FOOD
+        - RENT
+        - UTILITIES
+
+    TransactionDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        amount:
+          type: number
+          format: double
+          minimum: 0
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        category:
+          $ref: '#/components/schemas/Category'
+        recordDate:
+          type: string
+          format: date
+        description:
+          type: string
+      required:
+        - amount
+        - type
+        - category
+        - recordDate
+
+    ExceptionResponse:
+      type: object
+      properties:
+        timeStamp:
+          type: string
+          format: date-time
+        message:
+          type: string
+        details:
+          type: string
+        path:
+          type: string
+
+    DashboardSummaryDto:
+      type: object
+      properties:
+        totalIncome:
+          type: number
+          format: double
+        totalExpenses:
+          type: number
+          format: double
+        netBalance:
+          type: number
+          format: double
+
+    CategoryExpenditure:
+      type: object
+      properties:
+        category:
+          $ref: '#/components/schemas/Category'
+        totalAmount:
+          type: number
+          format: double
+
+    MonthlyTrend:
+      type: object
+      properties:
+        month:
+          type: integer
+        year:
+          type: integer
+        profit:
+          type: number
+          format: double
+
+    RoleEnum:
+      type: string
+      enum: [VIEWER, ANALYST, ADMIN]
+
+    StatusEnum:
+      type: string
+      enum: [ACTIVE, INACTIVE]
+
+    SignInRequest:
+      type: object
+      required: [userName, email, userPassword, role]
+      properties:
+        userName:
+          type: string
+        email:
+          type: string
+          format: email
+          pattern: '^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.com$'
+        userPassword:
+          type: string
+          format: password
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+
+    LoginRequest:
+      type: object
+      required: [userName, userPassword]
+      properties:
+        userName:
+          type: string
+        userPassword:
+          type: string
+          format: password
+
+    UserResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        userName:
+          type: string
+        email:
+          type: string
+          format: email
+          pattern: '^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.com$'
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        lastActiveAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT Access Token
+
+
+
+
+
+
