@@ -30,7 +30,9 @@ public class TransactionRecordConfiguration {
                 .cors(cors->{})
                 .csrf(customizer -> customizer.disable())
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/v1/signin","/api/v1/login")
+                        .requestMatchers("/api/v1/signin","/api/v1/login","/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html")
                         .permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
