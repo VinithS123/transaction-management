@@ -6,4 +6,5 @@ public interface CategorySummary {
 
     Category getCategory();
     Double getTotalAmount();
+
 }

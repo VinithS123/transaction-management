@@ -1,10 +1,21 @@
 # Transaction Management Backend
 
-A Spring Boot backend application for managing financial transactions with secure user access, validation, dashboard insights, and analytics.
+<p align="left">
+  <img src="https://img.shields.io/badge/Java-21-F89820?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21">
+  <img src="https://img.shields.io/badge/Spring%20Boot-3.4.4-2E8B57?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot 3.4.4">
+  <img src="https://img.shields.io/badge/Spring%20Web-REST%20APIs-3A7BD5?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Web">
+  <img src="https://img.shields.io/badge/Spring%20Data%20JPA-Data%20Access-3A7BD5?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Data JPA">
+  <img src="https://img.shields.io/badge/Spring%20Security-JWT%20Auth-3A7BD5?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security">
+  <img src="https://img.shields.io/badge/JWT-Token%20Security-1F2937?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT">
+  <img src="https://img.shields.io/badge/PostgreSQL-Database-2F5D7E?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/MapStruct-DTO%20Mapping-6C4AB6?style=for-the-badge" alt="MapStruct">
+  <img src="https://img.shields.io/badge/Maven-Build%20Tool-B64A41?style=for-the-badge&logo=apachemaven&logoColor=white" alt="Maven">
+  <img src="https://img.shields.io/badge/Swagger%20%2F%20OpenAPI-API%20Docs-4CAF50?style=for-the-badge&logo=swagger&logoColor=white" alt="Swagger / OpenAPI">
+</p>
 
 ## Project Overview
 
-This project was built as a Spring Boot project to demonstrate backend design ability, API design practices, validation handling, security implementation, and clean code structure.
+A Spring Boot backend application for managing financial transactions with secure user access, validation, dashboard insights, and analytics. This project was built as a Spring Boot project to demonstrate backend design ability, API design practices, validation handling, security implementation, and clean code structure.
 
 The application supports:
 
