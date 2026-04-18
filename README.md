@@ -1,19 +1,6 @@
-# Transaction Management Backend
+# 🏦 Transaction Management Backend
 
-<p align="left">
-  <img src="https://img.shields.io/badge/Java-21-F89820?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21">
-  <img src="https://img.shields.io/badge/Spring%20Boot-3.4.4-2E8B57?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot 3.4.4">
-  <img src="https://img.shields.io/badge/Spring%20Web-REST%20APIs-3A7BD5?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Web">
-  <img src="https://img.shields.io/badge/Spring%20Data%20JPA-Data%20Access-3A7BD5?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Data JPA">
-  <img src="https://img.shields.io/badge/Spring%20Security-JWT%20Auth-3A7BD5?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security">
-  <img src="https://img.shields.io/badge/JWT-Token%20Security-1F2937?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT">
-  <img src="https://img.shields.io/badge/PostgreSQL-Database-2F5D7E?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
-  <img src="https://img.shields.io/badge/MapStruct-DTO%20Mapping-6C4AB6?style=for-the-badge" alt="MapStruct">
-  <img src="https://img.shields.io/badge/Maven-Build%20Tool-B64A41?style=for-the-badge&logo=apachemaven&logoColor=white" alt="Maven">
-  <img src="https://img.shields.io/badge/Swagger%20%2F%20OpenAPI-API%20Docs-4CAF50?style=for-the-badge&logo=swagger&logoColor=white" alt="Swagger / OpenAPI">
-</p>
-
-## Project Overview
+## 🌟 Project Overview
 
 A Spring Boot backend application for managing financial transactions with secure user access, validation, dashboard insights, and analytics. This project was built as a Spring Boot project to demonstrate backend design ability, API design practices, validation handling, security implementation, and clean code structure.
 
@@ -29,7 +16,7 @@ The application supports:
 - Structured exception handling
 - Swagger/OpenAPI-based API documentation
 
-## Key Highlights
+## ✨ Key Highlights
 
 - Built as a Spring Boot project with clean layered architecture
 - Followed a design-first approach using Swagger/OpenAPI
@@ -39,7 +26,7 @@ The application supports:
 - Added reporting-focused APIs beyond basic CRUD
 - Centralized exception handling for consistent API responses
 
-## Architecture
+## 🏗️ Architecture
 
 ```mermaid
 graph TD
@@ -68,7 +55,7 @@ graph TD
     style DB fill:#ECEFF1,stroke:#90A4AE,color:#263238
 ```
 
-## Approaches Followed
+## 🧭 Approaches Followed
 
 - Designed APIs first using Swagger/OpenAPI before coding
 - Used the API contract as the source of truth for implementation
@@ -79,7 +66,7 @@ graph TD
 - Added custom queries for search, filtering, and analytics
 - Handled security through JWT and role-based access rules
 
-## API Documentation
+## 📚 API Documentation
 
 API documentation was created using Swagger/OpenAPI in `transaction.yaml`.
 
@@ -98,7 +85,7 @@ The OpenAPI contract was then used to generate:
 
 This ensured the implementation remained aligned with the documented API design.
 
-## Security
+## 🔐 Security
 
 The application uses JWT-based authentication for secure access.
 
@@ -120,7 +107,7 @@ The application uses JWT-based authentication for secure access.
 - Role-based authorization using `@PreAuthorize`
 - Authenticated user-based transaction access
 
-## Validation and Error Handling
+## 🧪 Validation and Error Handling
 
 Validation is handled at multiple levels:
 
@@ -143,7 +130,7 @@ Error handling is centralized using global exception handling to return consiste
 - Details
 - Request path
 
-## Response Code Handling
+## 📡 Response Code Handling
 
 The API returns standard HTTP status codes to clearly represent the result of each request.
 
@@ -156,7 +143,7 @@ The API returns standard HTTP status codes to clearly represent the result of ea
 - `404 Not Found` when the requested transaction is not available
 - `500 Internal Server Error` for unexpected server-side failures
 
-## Features Implemented
+## 🧩 Features Implemented
 
 ### Authentication
 - User registration
@@ -188,7 +175,7 @@ The API returns standard HTTP status codes to clearly represent the result of ea
 - Category-wise expenditure
 - Monthly profit trends
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 - Java 21
 - Spring Boot 3
@@ -201,7 +188,7 @@ The API returns standard HTTP status codes to clearly represent the result of ea
 - Maven
 - Swagger / OpenAPI
 
-## Project Structure
+## 🗂️ Project Structure
 
 - `controller` : Handles REST API requests
 - `service` : Contains business logic
@@ -211,7 +198,7 @@ The API returns standard HTTP status codes to clearly represent the result of ea
 - `config` : Security and application configuration
 - `exception` : Centralized exception handling
 
-## What This Project Demonstrates
+## 🎯 What This Project Demonstrates
 
 - Spring Boot backend development using layered architecture
 - Design-first API development
@@ -220,6 +207,6 @@ The API returns standard HTTP status codes to clearly represent the result of ea
 - Real-world transaction querying and reporting
 - Clean separation between contract, business logic, and persistence layers
 
-## Conclusion
+## ✅ Conclusion
 
 This project was built not just as a CRUD backend, but as a structured, secure, and scalable Spring Boot project. It demonstrates API-first development, clean architecture, validation practices, security design, and support for both operational and analytical use cases.
