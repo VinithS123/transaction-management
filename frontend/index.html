@@ -3,143 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transaction Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Minimalist Finance</title>
+    <!-- Modern Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { primary: '#111827' } // Minimalist dark theme for buttons
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Small utility to hide views */
+        .hidden-view { display: none !important; }
+    </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 antialiased min-h-screen">
 
-<!-- AUTHENTICATION VIEW (Login & Register) -->
-<div id="auth-view" class="container view active">
-    <div class="auth-box">
-        <div class="auth-tabs">
-            <button id="tab-login" class="tab-btn active">Login</button>
-            <button id="tab-register" class="tab-btn">Register</button>
+<!-- AUTHENTICATION VIEW -->
+<div id="auth-view" class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-100">
+            <button id="tab-login" class="flex-1 py-4 text-sm font-semibold text-gray-900 border-b-2 border-primary transition-colors">Login</button>
+            <button id="tab-register" class="flex-1 py-4 text-sm font-medium text-gray-400 hover:text-gray-700 transition-colors">Register</button>
         </div>
 
         <!-- Login Form -->
-        <form id="login-form" class="auth-form active">
-            <h2>Welcome Back</h2>
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="login-username" required>
+        <form id="login-form" class="p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Welcome back</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="login-username" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="login-password" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                </div>
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="login-password" required>
-            </div>
-            <button type="submit" class="btn">Login</button>
-            <p id="login-msg" class="msg error-msg"></p>
+            <button type="submit" class="w-full mt-6 bg-primary text-white rounded-lg px-4 py-3 text-sm font-semibold hover:bg-gray-800 transition-colors shadow-sm">Sign In</button>
+            <p id="login-msg" class="mt-4 text-sm text-center text-red-500 font-medium"></p>
         </form>
 
-        <!-- Register Form -->
-        <form id="register-form" class="auth-form">
-            <h2>Create Account</h2>
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="reg-username" required>
+        <!-- Register Form (Hidden by default) -->
+        <form id="register-form" class="p-8 hidden-view">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Create account</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="reg-username" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="reg-email" placeholder="you@example.com" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="reg-password" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                    <select id="reg-role" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                        <option value="VIEWER">Viewer</option>
+                        <option value="ANALYST">Analyst</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="reg-email" required placeholder="user@example.com">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="reg-password" required>
-            </div>
-            <div class="form-group">
-                <label>Role</label>
-                <select id="reg-role" required>
-                    <option value="VIEWER">Viewer</option>
-                    <option value="ANALYST">Analyst</option>
-                    <option value="ADMIN">Admin</option>
-                </select>
-            </div>
-            <button type="submit" class="btn">Sign Up</button>
-            <p id="reg-msg" class="msg"></p>
+            <button type="submit" class="w-full mt-6 bg-primary text-white rounded-lg px-4 py-3 text-sm font-semibold hover:bg-gray-800 transition-colors shadow-sm">Sign Up</button>
+            <p id="reg-msg" class="mt-4 text-sm text-center font-medium"></p>
         </form>
     </div>
 </div>
 
 <!-- DASHBOARD VIEW -->
-<div id="dashboard-view" class="container view">
-    <header>
-        <h1>My Dashboard</h1>
-        <button id="logout-btn" class="btn btn-outline">Logout</button>
-    </header>
+<div id="dashboard-view" class="hidden-view">
 
-    <!-- Summary Cards -->
-    <div class="summary-cards">
-        <div class="card">
-            <h3>Total Income</h3>
-            <p id="total-income">$0.00</p>
+    <!-- Top Navigation -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <h1 class="text-xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+                <button id="logout-btn" class="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Logout</button>
+            </div>
         </div>
-        <div class="card">
-            <h3>Total Expenses</h3>
-            <p id="total-expenses">$0.00</p>
-        </div>
-        <div class="card">
-            <h3>Net Balance</h3>
-            <p id="net-balance">$0.00</p>
-        </div>
-    </div>
+    </nav>
 
-    <div class="main-content">
-        <!-- Add Transaction Form -->
-        <div class="form-section">
-            <h3>Add Transaction</h3>
-            <form id="transaction-form">
-                <div class="form-group">
-                    <label>Amount</label>
-                    <input type="number" id="amount" step="0.01" min="0" required>
-                </div>
-                <div class="form-group">
-                    <label>Type</label>
-                    <select id="type" required>
-                        <option value="INCOME">Income</option>
-                        <option value="EXPENSE">Expense</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Category</label>
-                    <select id="category" required>
-                        <option value="SALARY">Salary</option>
-                        <option value="FOOD">Food</option>
-                        <option value="RENT">Rent</option>
-                        <option value="UTILITIES">Utilities</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Date</label>
-                    <input type="date" id="recordDate" required>
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <input type="text" id="description">
-                </div>
-                <button type="submit" class="btn">Add Transaction</button>
-                <p id="tx-msg" class="msg"></p>
-            </form>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
+                <p class="text-sm font-medium text-gray-500 mb-1">Total Income</p>
+                <p id="total-income" class="text-3xl font-bold text-gray-900 tracking-tight">$0.00</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
+                <p class="text-sm font-medium text-gray-500 mb-1">Total Expenses</p>
+                <p id="total-expenses" class="text-3xl font-bold text-gray-900 tracking-tight">$0.00</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
+                <p class="text-sm font-medium text-gray-500 mb-1">Net Balance</p>
+                <p id="net-balance" class="text-3xl font-bold text-primary tracking-tight">$0.00</p>
+            </div>
         </div>
 
-        <!-- Recent Transactions Table -->
-        <div class="table-section">
-            <h3>Recent Transactions</h3>
-            <table id="transactions-table">
-                <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Description</th>
-                    <th>Category</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                </tr>
-                </thead>
-                <tbody id="transactions-body">
-                <!-- Rows populated by JS -->
-                </tbody>
-            </table>
+        <!-- Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Add Transaction Form -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] h-fit">
+                <h3 class="text-lg font-semibold text-gray-900 mb-5">New Transaction</h3>
+                <form id="transaction-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                        <input type="number" id="amount" step="0.01" min="0" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                            <select id="type" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
+                                <option value="INCOME">Income</option>
+                                <option value="EXPENSE">Expense</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <select id="category" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
+                                <option value="SALARY">Salary</option>
+                                <option value="FOOD">Food</option>
+                                <option value="RENT">Rent</option>
+                                <option value="UTILITIES">Utilities</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" id="recordDate" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-all text-gray-600">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <input type="text" id="description" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-all" placeholder="Optional details...">
+                    </div>
+                    <button type="submit" class="w-full mt-2 bg-primary text-white rounded-lg px-4 py-2.5 text-sm font-semibold hover:bg-gray-800 transition-colors shadow-sm">Save Record</button>
+                    <p id="tx-msg" class="mt-2 text-sm text-center font-medium"></p>
+                </form>
+            </div>
+
+            <!-- Recent Transactions Table -->
+            <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] overflow-hidden">
+                <div class="px-6 py-5 border-b border-gray-100 bg-white">
+                    <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-500 whitespace-nowrap">
+                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4 font-medium">Date</th>
+                            <th class="px-6 py-4 font-medium">Description</th>
+                            <th class="px-6 py-4 font-medium">Category</th>
+                            <th class="px-6 py-4 font-medium text-right">Amount</th>
+                        </tr>
+                        </thead>
+                        <tbody id="transactions-body" class="divide-y divide-gray-100">
+                        <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
-    </div>
+    </main>
 </div>
 
 <script src="app.js"></script>

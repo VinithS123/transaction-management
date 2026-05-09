@@ -4,14 +4,11 @@ const BASE_URL = 'https://transaction-management-vq47.onrender.com/api/v1';
 const authView = document.getElementById('auth-view');
 const dashboardView = document.getElementById('dashboard-view');
 
-// Auth DOM Elements
 const tabLogin = document.getElementById('tab-login');
 const tabRegister = document.getElementById('tab-register');
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
 const logoutBtn = document.getElementById('logout-btn');
-
-// Transaction DOM Elements
 const transactionForm = document.getElementById('transaction-form');
 
 // Initialization
@@ -26,51 +23,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- NAVIGATION & TOGGLES ---
 function showAuthView() {
-    authView.classList.add('active');
-    dashboardView.classList.remove('active');
+    authView.classList.remove('hidden-view');
+    dashboardView.classList.add('hidden-view');
 }
 
 function showDashboard() {
-    authView.classList.remove('active');
-    dashboardView.classList.add('active');
+    authView.classList.add('hidden-view');
+    dashboardView.classList.remove('hidden-view');
     loadDashboardData();
 }
 
-// Tab Switching Logic
+// Tab Switching UI
 tabLogin.addEventListener('click', () => {
-    tabLogin.classList.add('active');
-    tabRegister.classList.remove('active');
-    loginForm.classList.add('active');
-    registerForm.classList.remove('active');
+    tabLogin.className = 'flex-1 py-4 text-sm font-semibold text-gray-900 border-b-2 border-primary transition-colors';
+    tabRegister.className = 'flex-1 py-4 text-sm font-medium text-gray-400 hover:text-gray-700 transition-colors border-b-2 border-transparent';
+    loginForm.classList.remove('hidden-view');
+    registerForm.classList.add('hidden-view');
 });
 
 tabRegister.addEventListener('click', () => {
-    tabRegister.classList.add('active');
-    tabLogin.classList.remove('active');
-    registerForm.classList.add('active');
-    loginForm.classList.remove('active');
+    tabRegister.className = 'flex-1 py-4 text-sm font-semibold text-gray-900 border-b-2 border-primary transition-colors';
+    tabLogin.className = 'flex-1 py-4 text-sm font-medium text-gray-400 hover:text-gray-700 transition-colors border-b-2 border-transparent';
+    registerForm.classList.remove('hidden-view');
+    loginForm.classList.add('hidden-view');
 });
 
-// Fetch Helper (Automatically attaches JWT)
+// Fetch Helper
 function getHeaders() {
-    const token = localStorage.getItem('jwt');
     return {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${localStorage.getItem('jwt')}`
     };
 }
 
 // --- REGISTRATION LOGIC ---
 registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const msgElement = document.getElementById('reg-msg');
+    const msg = document.getElementById('reg-msg');
 
     const payload = {
         userName: document.getElementById('reg-username').value,
         email: document.getElementById('reg-email').value,
         userPassword: document.getElementById('reg-password').value,
         role: document.getElementById('reg-role').value,
-        status: "ACTIVE" // Defaulting to ACTIVE based on your Swagger Schema
+        status: "ACTIVE"
     };
 
     try {
@@ -80,50 +76,47 @@ registerForm.addEventListener('submit', async (e) => {
             body: JSON.stringify(payload)
         });
 
-        if (!response.ok) {
-            throw new Error('Registration failed. Username or email might be taken.');
-        }
+        if (!response.ok) throw new Error('Username or email taken.');
 
-        // Success
-        msgElement.className = 'msg success-msg';
-        msgElement.innerText = 'Account created successfully! Please log in.';
+        msg.className = 'mt-4 text-sm text-center text-green-600 font-medium';
+        msg.innerText = 'Account created! Redirecting to login...';
         registerForm.reset();
 
-        // Auto-switch to login tab after 2 seconds
         setTimeout(() => {
             tabLogin.click();
-            msgElement.innerText = '';
+            msg.innerText = '';
         }, 2000);
 
     } catch (error) {
-        msgElement.className = 'msg error-msg';
-        msgElement.innerText = error.message;
+        msg.className = 'mt-4 text-sm text-center text-red-500 font-medium';
+        msg.innerText = error.message;
     }
 });
 
 // --- LOGIN LOGIC ---
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const userName = document.getElementById('login-username').value;
-    const userPassword = document.getElementById('login-password').value;
-    const msgElement = document.getElementById('login-msg');
+    const msg = document.getElementById('login-msg');
 
     try {
         const response = await fetch(`${BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userName, userPassword })
+            body: JSON.stringify({
+                userName: document.getElementById('login-username').value,
+                userPassword: document.getElementById('login-password').value
+            })
         });
 
         if (!response.ok) throw new Error('Invalid credentials');
 
         const data = await response.json();
         localStorage.setItem('jwt', data.token);
-        msgElement.innerText = '';
+        msg.innerText = '';
         loginForm.reset();
         showDashboard();
     } catch (error) {
-        msgElement.innerText = 'Login failed. Please check your credentials.';
+        msg.innerText = error.message;
     }
 });
 
@@ -135,39 +128,47 @@ logoutBtn.addEventListener('click', () => {
 // --- DASHBOARD DATA ---
 async function loadDashboardData() {
     try {
-        // Fetch Summary
         const summaryRes = await fetch(`${BASE_URL}/dashboard/summary`, { headers: getHeaders() });
-        if (summaryRes.status === 401) return logoutBtn.click(); // Token expired
+        if (summaryRes.status === 401) return logoutBtn.click();
         const summary = await summaryRes.json();
 
-        document.getElementById('total-income').innerText = `$${summary.totalIncome.toFixed(2)}`;
-        document.getElementById('total-expenses').innerText = `$${summary.totalExpenses.toFixed(2)}`;
-        document.getElementById('net-balance').innerText = `$${summary.netBalance.toFixed(2)}`;
+        // Format to currency
+        document.getElementById('total-income').innerText = `$${summary.totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        document.getElementById('total-expenses').innerText = `$${summary.totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        document.getElementById('net-balance').innerText = `$${summary.netBalance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
 
-        // Fetch Recent Transactions
         const recentRes = await fetch(`${BASE_URL}/dashboard/recent`, { headers: getHeaders() });
         const recentTxs = await recentRes.json();
-
         renderTransactions(recentTxs);
     } catch (error) {
-        console.error("Error loading dashboard data:", error);
+        console.error("Dashboard error:", error);
     }
 }
 
 function renderTransactions(transactions) {
     const tbody = document.getElementById('transactions-body');
-    tbody.innerHTML = ''; // Clear current rows
+    tbody.innerHTML = '';
 
     transactions.forEach(tx => {
-        const tr = document.createElement('tr');
-        const typeClass = tx.type === 'INCOME' ? 'type-income' : 'type-expense';
+        const isIncome = tx.type === 'INCOME';
+        const amountColor = isIncome ? 'text-emerald-600' : 'text-gray-900';
+        const sign = isIncome ? '+' : '-';
 
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50 transition-colors';
         tr.innerHTML = `
-            <td>${tx.recordDate}</td>
-            <td>${tx.description || '-'}</td>
-            <td>${tx.category}</td>
-            <td class="${typeClass}">${tx.type}</td>
-            <td>$${tx.amount.toFixed(2)}</td>
+            <td class="px-6 py-4">${tx.recordDate}</td>
+            <td class="px-6 py-4">
+                <span class="block text-gray-900 font-medium">${tx.description || 'No description'}</span>
+            </td>
+            <td class="px-6 py-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    ${tx.category}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-right font-medium ${amountColor}">
+                ${sign}$${tx.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -176,7 +177,10 @@ function renderTransactions(transactions) {
 // --- ADD TRANSACTION ---
 transactionForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const msgElement = document.getElementById('tx-msg');
+    const msg = document.getElementById('tx-msg');
+    const btn = transactionForm.querySelector('button');
+    btn.disabled = true;
+    btn.innerText = 'Saving...';
 
     const payload = {
         amount: parseFloat(document.getElementById('amount').value),
@@ -193,18 +197,18 @@ transactionForm.addEventListener('submit', async (e) => {
             body: JSON.stringify(payload)
         });
 
-        if (response.ok) {
-            msgElement.className = 'msg success-msg';
-            msgElement.innerText = 'Transaction added!';
-            transactionForm.reset();
-            loadDashboardData(); // Refresh data
-        } else {
-            throw new Error('Failed to add transaction');
-        }
-    } catch (error) {
-        msgElement.className = 'msg error-msg';
-        msgElement.innerText = error.message;
-    }
+        if (!response.ok) throw new Error('Failed to save');
 
-    setTimeout(() => { msgElement.innerText = ''; }, 3000);
+        msg.className = 'mt-2 text-sm text-center text-green-600 font-medium';
+        msg.innerText = 'Success!';
+        transactionForm.reset();
+        loadDashboardData();
+    } catch (error) {
+        msg.className = 'mt-2 text-sm text-center text-red-500 font-medium';
+        msg.innerText = error.message;
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'Save Record';
+        setTimeout(() => { msg.innerText = ''; }, 3000);
+    }
 });
