@@ -1,174 +1,210 @@
-// --- CONFIGURATION ---
-const API_BASE_URL = 'https://transaction-management-vq47.onrender.com/api/v1';
-let jwtToken = localStorage.getItem('jwt_token');
+const BASE_URL = 'https://transaction-management-vq47.onrender.com/api/v1';
 
-// --- DOM ELEMENTS ---
-const authSection = document.getElementById('auth-section');
-const appSection = document.getElementById('app-section');
-const loginForm = document.getElementById('login-form');
-const errorMsg = document.getElementById('login-error');
-
-// Views
+// DOM Elements
+const authView = document.getElementById('auth-view');
 const dashboardView = document.getElementById('dashboard-view');
-const transactionsView = document.getElementById('transactions-view');
 
-// Nav
-const navDashboard = document.getElementById('nav-dashboard');
-const navTransactions = document.getElementById('nav-transactions');
-const navLogout = document.getElementById('nav-logout');
+// Auth DOM Elements
+const tabLogin = document.getElementById('tab-login');
+const tabRegister = document.getElementById('tab-register');
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
+const logoutBtn = document.getElementById('logout-btn');
 
-// --- INITIALIZATION ---
-function init() {
-    if (jwtToken) {
-        showApp();
-        loadDashboard();
+// Transaction DOM Elements
+const transactionForm = document.getElementById('transaction-form');
+
+// Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('jwt');
+    if (token) {
+        showDashboard();
     } else {
-        showLogin();
+        showAuthView();
     }
+});
+
+// --- NAVIGATION & TOGGLES ---
+function showAuthView() {
+    authView.classList.add('active');
+    dashboardView.classList.remove('active');
 }
 
-// --- UTILS ---
-function authHeaders() {
+function showDashboard() {
+    authView.classList.remove('active');
+    dashboardView.classList.add('active');
+    loadDashboardData();
+}
+
+// Tab Switching Logic
+tabLogin.addEventListener('click', () => {
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+    loginForm.classList.add('active');
+    registerForm.classList.remove('active');
+});
+
+tabRegister.addEventListener('click', () => {
+    tabRegister.classList.add('active');
+    tabLogin.classList.remove('active');
+    registerForm.classList.add('active');
+    loginForm.classList.remove('active');
+});
+
+// Fetch Helper (Automatically attaches JWT)
+function getHeaders() {
+    const token = localStorage.getItem('jwt');
     return {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${jwtToken}`
+        'Authorization': `Bearer ${token}`
     };
 }
 
-function formatCurrency(amount) {
-    return '$' + parseFloat(amount).toFixed(2);
-}
-
-// --- NAVIGATION LOGIC ---
-function showLogin() {
-    authSection.classList.remove('hidden');
-    appSection.classList.add('hidden');
-}
-
-function showApp() {
-    authSection.classList.add('hidden');
-    appSection.classList.remove('hidden');
-}
-
-function switchView(view) {
-    dashboardView.classList.add('hidden');
-    transactionsView.classList.add('hidden');
-    view.classList.remove('hidden');
-}
-
-navDashboard.addEventListener('click', () => {
-    switchView(dashboardView);
-    loadDashboard();
-});
-
-navTransactions.addEventListener('click', () => {
-    switchView(transactionsView);
-});
-
-navLogout.addEventListener('click', () => {
-    localStorage.removeItem('jwt_token');
-    jwtToken = null;
-    showLogin();
-});
-
-// --- AUTHENTICATION ---
-loginForm.addEventListener('submit', async (e) => {
+// --- REGISTRATION LOGIC ---
+registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const userName = document.getElementById('username').value;
-    const userPassword = document.getElementById('password').value;
+    const msgElement = document.getElementById('reg-msg');
+
+    const payload = {
+        userName: document.getElementById('reg-username').value,
+        email: document.getElementById('reg-email').value,
+        userPassword: document.getElementById('reg-password').value,
+        role: document.getElementById('reg-role').value,
+        status: "ACTIVE" // Defaulting to ACTIVE based on your Swagger Schema
+    };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const response = await fetch(`${BASE_URL}/signin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error('Registration failed. Username or email might be taken.');
+        }
+
+        // Success
+        msgElement.className = 'msg success-msg';
+        msgElement.innerText = 'Account created successfully! Please log in.';
+        registerForm.reset();
+
+        // Auto-switch to login tab after 2 seconds
+        setTimeout(() => {
+            tabLogin.click();
+            msgElement.innerText = '';
+        }, 2000);
+
+    } catch (error) {
+        msgElement.className = 'msg error-msg';
+        msgElement.innerText = error.message;
+    }
+});
+
+// --- LOGIN LOGIC ---
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userName = document.getElementById('login-username').value;
+    const userPassword = document.getElementById('login-password').value;
+    const msgElement = document.getElementById('login-msg');
+
+    try {
+        const response = await fetch(`${BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userName, userPassword })
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            jwtToken = data.token;
-            localStorage.setItem('jwt_token', jwtToken);
-            errorMsg.textContent = '';
-            showApp();
-            loadDashboard();
-        } else {
-            errorMsg.textContent = 'Invalid credentials. Please try again.';
-        }
-    } catch (err) {
-        errorMsg.textContent = 'Server error. Is the backend running?';
-        console.error(err);
+        if (!response.ok) throw new Error('Invalid credentials');
+
+        const data = await response.json();
+        localStorage.setItem('jwt', data.token);
+        msgElement.innerText = '';
+        loginForm.reset();
+        showDashboard();
+    } catch (error) {
+        msgElement.innerText = 'Login failed. Please check your credentials.';
     }
+});
+
+logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('jwt');
+    showAuthView();
 });
 
 // --- DASHBOARD DATA ---
-async function loadDashboard() {
+async function loadDashboardData() {
     try {
         // Fetch Summary
-        const summaryRes = await fetch(`${API_BASE_URL}/dashboard/summary`, { headers: authHeaders() });
-        if (summaryRes.ok) {
-            const summary = await summaryRes.json();
-            document.getElementById('total-income').textContent = formatCurrency(summary.totalIncome);
-            document.getElementById('total-expenses').textContent = formatCurrency(summary.totalExpenses);
-            document.getElementById('net-balance').textContent = formatCurrency(summary.netBalance);
-        } else if (summaryRes.status === 401) {
-            navLogout.click(); // Token expired
-        }
+        const summaryRes = await fetch(`${BASE_URL}/dashboard/summary`, { headers: getHeaders() });
+        if (summaryRes.status === 401) return logoutBtn.click(); // Token expired
+        const summary = await summaryRes.json();
+
+        document.getElementById('total-income').innerText = `$${summary.totalIncome.toFixed(2)}`;
+        document.getElementById('total-expenses').innerText = `$${summary.totalExpenses.toFixed(2)}`;
+        document.getElementById('net-balance').innerText = `$${summary.netBalance.toFixed(2)}`;
 
         // Fetch Recent Transactions
-        const recentRes = await fetch(`${API_BASE_URL}/dashboard/recent`, { headers: authHeaders() });
-        if (recentRes.ok) {
-            const recentTxs = await recentRes.json();
-            const tbody = document.getElementById('recent-tbody');
-            tbody.innerHTML = ''; // Clear table
+        const recentRes = await fetch(`${BASE_URL}/dashboard/recent`, { headers: getHeaders() });
+        const recentTxs = await recentRes.json();
 
-            recentTxs.forEach(tx => {
-                const tr = document.createElement('tr');
-                const amountClass = tx.type === 'INCOME' ? 'text-success' : 'text-danger';
-                tr.innerHTML = `
-                    <td>${tx.recordDate}</td>
-                    <td>${tx.description || '-'}</td>
-                    <td>${tx.category}</td>
-                    <td class="${amountClass}">${tx.type === 'INCOME' ? '+' : '-'}${formatCurrency(tx.amount)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-    } catch (err) {
-        console.error("Failed to load dashboard data", err);
+        renderTransactions(recentTxs);
+    } catch (error) {
+        console.error("Error loading dashboard data:", error);
     }
 }
 
-// --- TRANSACTIONS DATA ---
-document.getElementById('add-tx-form').addEventListener('submit', async (e) => {
+function renderTransactions(transactions) {
+    const tbody = document.getElementById('transactions-body');
+    tbody.innerHTML = ''; // Clear current rows
+
+    transactions.forEach(tx => {
+        const tr = document.createElement('tr');
+        const typeClass = tx.type === 'INCOME' ? 'type-income' : 'type-expense';
+
+        tr.innerHTML = `
+            <td>${tx.recordDate}</td>
+            <td>${tx.description || '-'}</td>
+            <td>${tx.category}</td>
+            <td class="${typeClass}">${tx.type}</td>
+            <td>$${tx.amount.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// --- ADD TRANSACTION ---
+transactionForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const msgElement = document.getElementById('tx-msg');
 
     const payload = {
-        amount: parseFloat(document.getElementById('tx-amount').value),
-        type: document.getElementById('tx-type').value,
-        category: document.getElementById('tx-category').value,
-        recordDate: document.getElementById('tx-date').value,
-        description: document.getElementById('tx-desc').value
+        amount: parseFloat(document.getElementById('amount').value),
+        type: document.getElementById('type').value,
+        category: document.getElementById('category').value,
+        recordDate: document.getElementById('recordDate').value,
+        description: document.getElementById('description').value
     };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/transactions`, {
+        const response = await fetch(`${BASE_URL}/transactions`, {
             method: 'POST',
-            headers: authHeaders(),
+            headers: getHeaders(),
             body: JSON.stringify(payload)
         });
 
-        if (response.status === 201) {
-            alert('Transaction added successfully!');
-            e.target.reset(); // Clear form
-            navDashboard.click(); // Go back to dashboard to see the update
+        if (response.ok) {
+            msgElement.className = 'msg success-msg';
+            msgElement.innerText = 'Transaction added!';
+            transactionForm.reset();
+            loadDashboardData(); // Refresh data
         } else {
-            alert('Failed to add transaction.');
+            throw new Error('Failed to add transaction');
         }
-    } catch (err) {
-        console.error(err);
-        alert('Server error.');
+    } catch (error) {
+        msgElement.className = 'msg error-msg';
+        msgElement.innerText = error.message;
     }
-});
 
-// Boot the app
-init();
+    setTimeout(() => { msgElement.innerText = ''; }, 3000);
+});
