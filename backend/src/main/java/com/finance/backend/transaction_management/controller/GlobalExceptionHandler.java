@@ -26,15 +26,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ExceptionResponse> handleException(Exception exception,HttpServletRequest request){
-        ExceptionResponse response = new ExceptionResponse()
-                .timeStamp(LocalDateTime.now())
-                .message(exception.getMessage())
-                .details("Internal Error Occurred")
-                .path(request.getRequestURI());
-        return ResponseEntity.internalServerError().body(response);
-    }
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<ExceptionResponse> handleException(Exception exception,HttpServletRequest request){
+//        ExceptionResponse response = new ExceptionResponse()
+//                .timeStamp(LocalDateTime.now())
+//                .message(exception.getMessage())
+//                .details("Internal Error Occurred")
+//                .path(request.getRequestURI());
+//        return ResponseEntity.internalServerError().body(response);
+//    }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ExceptionResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException exception, HttpServletRequest request){
