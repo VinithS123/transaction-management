@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Authentication Section -->
+<div id="auth-section" class="container active-view">
+    <div class="card auth-card">
+        <h2>Login</h2>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+            <p id="login-error" class="text-danger"></p>
+        </form>
+    </div>
+</div>
+
+<!-- Main App Section -->
+<div id="app-section" class="container hidden">
+    <nav class="navbar">
+        <h2>FinanceApp</h2>
+        <ul class="nav-links">
+            <li><a href="#" id="nav-dashboard">Dashboard</a></li>
+            <li><a href="#" id="nav-transactions">Transactions</a></li>
+            <li><a href="#" id="nav-logout" class="text-danger">Logout</a></li>
+        </ul>
+    </nav>
+
+    <!-- Dashboard View -->
+    <div id="dashboard-view" class="view active-view">
+        <h3>Dashboard Summary</h3>
+        <div class="summary-cards">
+            <div class="card">
+                <h4>Total Income</h4>
+                <p id="total-income" class="text-success">$0.00</p>
+            </div>
+            <div class="card">
+                <h4>Total Expenses</h4>
+                <p id="total-expenses" class="text-danger">$0.00</p>
+            </div>
+            <div class="card">
+                <h4>Net Balance</h4>
+                <p id="net-balance" class="text-primary">$0.00</p>
+            </div>
+        </div>
+
+        <div class="card mt-2">
+            <h3>Recent Transactions</h3>
+            <table id="recent-table">
+                <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                </tr>
+                </thead>
+                <tbody id="recent-tbody">
+                <!-- Data will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Transactions View -->
+    <div id="transactions-view" class="view hidden">
+        <div class="card">
+            <h3>Add New Transaction</h3>
+            <form id="add-tx-form" class="inline-form">
+                <input type="number" id="tx-amount" placeholder="Amount" step="0.01" required>
+                <select id="tx-type" required>
+                    <option value="INCOME">Income</option>
+                    <option value="EXPENSE">Expense</option>
+                </select>
+                <select id="tx-category" required>
+                    <option value="SALARY">Salary</option>
+                    <option value="FOOD">Food</option>
+                    <option value="RENT">Rent</option>
+                    <option value="UTILITIES">Utilities</option>
+                </select>
+                <input type="date" id="tx-date" required>
+                <input type="text" id="tx-desc" placeholder="Description">
+                <button type="submit" class="btn btn-primary">Add</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
