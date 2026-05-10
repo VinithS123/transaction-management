@@ -37,6 +37,7 @@ public class TransactionRecordConfiguration {
                 .cors(Customizer.withDefaults())
                 .csrf(customizer -> customizer.disable())
                 .authorizeHttpRequests(request -> request
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/signin","/api/v1/login","/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html")
