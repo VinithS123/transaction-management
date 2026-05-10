@@ -65,13 +65,6 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }catch (Exception e){
             System.out.println(e.getMessage());
-            System.out.println("JWT Filter error: " + e.getMessage());
-            // Don't just swallow — clear context and let it return 401
-            SecurityContextHolder.clearContext();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"message\": \"" + e.getMessage() + "\"}");
-            return; // ← stop filter chain, don't call filterChain.doFilter
-
         }
         filterChain.doFilter(request,response);
     }

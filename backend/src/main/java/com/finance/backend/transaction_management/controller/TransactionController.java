@@ -45,7 +45,7 @@ public class TransactionController implements TransactionsApi{
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN','VIEWER','ANALYST')")
     public ResponseEntity<List<TransactionDto>> getAllTransactions(TransactionType type, Category category,
                                                                    LocalDate startDate, LocalDate endDate,
                                                                    String sortBy, String sortDir, Integer page, Integer size) {
