@@ -3,183 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimalist Finance</title>
-    <!-- Modern Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { primary: '#111827' } // Minimalist dark theme for buttons
-                }
-            }
-        }
-    </script>
-    <style>
-        /* Small utility to hide views */
-        .hidden-view { display: none !important; }
-    </style>
+    <title>FinTrack - Finance Management</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased min-h-screen">
+<body>
 
-<!-- AUTHENTICATION VIEW -->
-<div id="auth-view" class="flex items-center justify-center min-h-screen p-4">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
+<!-- Loading Spinner & Toast -->
+<div id="loader-overlay" class="hidden">
+    <div class="spinner"></div>
+    <p id="loader-msg">Loading...</p>
+</div>
+<div id="toast-container"></div>
 
-        <!-- Tabs -->
-        <div class="flex border-b border-gray-100">
-            <button id="tab-login" class="flex-1 py-4 text-sm font-semibold text-gray-900 border-b-2 border-primary transition-colors">Login</button>
-            <button id="tab-register" class="flex-1 py-4 text-sm font-medium text-gray-400 hover:text-gray-700 transition-colors">Register</button>
+<!-- PAGE 1: Authentication -->
+<div id="auth-page" class="page-container">
+    <div class="auth-box">
+        <h1>FinTrack</h1>
+
+        <div class="auth-tabs">
+            <button id="tab-login" class="active" onclick="switchAuthTab('login')">Login</button>
+            <button id="tab-register" onclick="switchAuthTab('register')">Register</button>
         </div>
 
         <!-- Login Form -->
-        <form id="login-form" class="p-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Welcome back</h2>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                    <input type="text" id="login-username" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" id="login-password" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                </div>
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="login-username" required>
             </div>
-            <button type="submit" class="w-full mt-6 bg-primary text-white rounded-lg px-4 py-3 text-sm font-semibold hover:bg-gray-800 transition-colors shadow-sm">Sign In</button>
-            <p id="login-msg" class="mt-4 text-sm text-center text-red-500 font-medium"></p>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
         </form>
 
-        <!-- Register Form (Hidden by default) -->
-        <form id="register-form" class="p-8 hidden-view">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Create account</h2>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                    <input type="text" id="reg-username" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="reg-email" placeholder="you@example.com" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" id="reg-password" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                    <select id="reg-role" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                        <option value="VIEWER">Viewer</option>
-                        <option value="ANALYST">Analyst</option>
-                        <option value="ADMIN">Admin</option>
-                    </select>
-                </div>
+        <!-- Register Form -->
+        <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="reg-username" required>
             </div>
-            <button type="submit" class="w-full mt-6 bg-primary text-white rounded-lg px-4 py-3 text-sm font-semibold hover:bg-gray-800 transition-colors shadow-sm">Sign Up</button>
-            <p id="reg-msg" class="mt-4 text-sm text-center font-medium"></p>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="reg-email" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="reg-password" required>
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="reg-role">
+                    <option value="VIEWER">Viewer</option>
+                    <option value="ANALYST">Analyst</option>
+                    <option value="ADMIN">Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Register</button>
         </form>
     </div>
 </div>
 
-<!-- DASHBOARD VIEW -->
-<div id="dashboard-view" class="hidden-view">
-
-    <!-- Top Navigation -->
-    <nav class="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <h1 class="text-xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-                <button id="logout-btn" class="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Logout</button>
-            </div>
+<!-- PAGE 2: Dashboard Application -->
+<div id="app-page" class="page-container hidden">
+    <nav class="navbar">
+        <div class="brand">FinTrack</div>
+        <div class="nav-actions">
+            <span id="user-role-badge" class="badge"></span>
+            <button onclick="logout()" class="btn btn-danger">Logout</button>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="main-tabs">
+        <button id="nav-transactions" class="active" onclick="switchAppTab('transactions')">Transactions</button>
+        <button id="nav-analytics" onclick="switchAppTab('analytics')">Dashboard Analytics</button>
+    </div>
 
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
-                <p class="text-sm font-medium text-gray-500 mb-1">Total Income</p>
-                <p id="total-income" class="text-3xl font-bold text-gray-900 tracking-tight">$0.00</p>
+    <div class="app-content">
+        <!-- TAB 1: Transactions -->
+        <div id="transactions-tab">
+            <div class="toolbar">
+                <div class="filters">
+                    <input type="text" id="search-keyword" placeholder="Search keyword...">
+                    <select id="filter-type">
+                        <option value="">All Types</option>
+                        <option value="INCOME">Income</option>
+                        <option value="EXPENSE">Expense</option>
+                    </select>
+                    <select id="filter-category">
+                        <option value="">All Categories</option>
+                        <option value="SALARY">Salary</option>
+                        <option value="PROFIT">Profit</option>
+                        <option value="FOOD">Food</option>
+                        <option value="RENT">Rent</option>
+                        <option value="UTILITIES">Utilities</option>
+                    </select>
+                    <input type="date" id="filter-start">
+                    <input type="date" id="filter-end">
+                    <button onclick="loadTransactions()" class="btn btn-secondary">Filter</button>
+                </div>
+                <button onclick="openTransactionModal()" class="btn btn-primary admin-only">Add Transaction</button>
             </div>
-            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
-                <p class="text-sm font-medium text-gray-500 mb-1">Total Expenses</p>
-                <p id="total-expenses" class="text-3xl font-bold text-gray-900 tracking-tight">$0.00</p>
+
+            <div class="table-responsive">
+                <table id="transactions-table">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="transactions-body"></tbody>
+                </table>
             </div>
-            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
-                <p class="text-sm font-medium text-gray-500 mb-1">Net Balance</p>
-                <p id="net-balance" class="text-3xl font-bold text-primary tracking-tight">$0.00</p>
+            <div class="pagination">
+                <button onclick="changePage(-1)" id="btn-prev">Previous</button>
+                <span id="page-info">Page 1</span>
+                <button onclick="changePage(1)" id="btn-next">Next</button>
             </div>
         </div>
 
-        <!-- Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            <!-- Add Transaction Form -->
-            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] h-fit">
-                <h3 class="text-lg font-semibold text-gray-900 mb-5">New Transaction</h3>
-                <form id="transaction-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                        <input type="number" id="amount" step="0.01" min="0" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                            <select id="type" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                                <option value="INCOME">Income</option>
-                                <option value="EXPENSE">Expense</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <select id="category" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                                <option value="SALARY">Salary</option>
-                                <option value="FOOD">Food</option>
-                                <option value="RENT">Rent</option>
-                                <option value="UTILITIES">Utilities</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                        <input type="date" id="recordDate" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-all text-gray-600">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <input type="text" id="description" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-all" placeholder="Optional details...">
-                    </div>
-                    <button type="submit" class="w-full mt-2 bg-primary text-white rounded-lg px-4 py-2.5 text-sm font-semibold hover:bg-gray-800 transition-colors shadow-sm">Save Record</button>
-                    <p id="tx-msg" class="mt-2 text-sm text-center font-medium"></p>
-                </form>
-            </div>
-
-            <!-- Recent Transactions Table -->
-            <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] overflow-hidden">
-                <div class="px-6 py-5 border-b border-gray-100 bg-white">
-                    <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
+        <!-- TAB 2: Dashboard Analytics -->
+        <div id="analytics-tab" class="hidden">
+            <div class="summary-cards">
+                <div class="card">
+                    <h3>Total Income</h3>
+                    <h2 id="sum-income">$0.00</h2>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-gray-500 whitespace-nowrap">
-                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
-                        <tr>
-                            <th class="px-6 py-4 font-medium">Date</th>
-                            <th class="px-6 py-4 font-medium">Description</th>
-                            <th class="px-6 py-4 font-medium">Category</th>
-                            <th class="px-6 py-4 font-medium text-right">Amount</th>
-                        </tr>
-                        </thead>
-                        <tbody id="transactions-body" class="divide-y divide-gray-100">
-                        <!-- Populated by JS -->
-                        </tbody>
-                    </table>
+                <div class="card">
+                    <h3>Total Expenses</h3>
+                    <h2 id="sum-expenses">$0.00</h2>
+                </div>
+                <div class="card">
+                    <h3>Net Balance</h3>
+                    <h2 id="sum-balance">$0.00</h2>
                 </div>
             </div>
 
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Expenses by Category</h3>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Monthly Profit Trend</h3>
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="recent-transactions card">
+                <h3>Recent Transactions</h3>
+                <ul id="recent-list"></ul>
+            </div>
         </div>
-    </main>
+    </div>
+</div>
+
+<!-- Transaction Modal (Add/Edit/View) -->
+<div id="transaction-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modal-title">Add Transaction</h2>
+            <span class="close" onclick="closeModal('transaction-modal')">&times;</span>
+        </div>
+        <form id="transaction-form" onsubmit="saveTransaction(event)">
+            <input type="hidden" id="tx-id">
+            <div class="form-group">
+                <label>Amount</label>
+                <input type="number" id="tx-amount" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select id="tx-type" required>
+                    <option value="INCOME">Income</option>
+                    <option value="EXPENSE">Expense</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="tx-category" required>
+                    <option value="SALARY">Salary</option>
+                    <option value="PROFIT">Profit</option>
+                    <option value="FOOD">Food</option>
+                    <option value="RENT">Rent</option>
+                    <option value="UTILITIES">Utilities</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="tx-date" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="tx-desc" rows="3"></textarea>
+            </div>
+            <div class="modal-footer" id="modal-actions">
+                <button type="submit" class="btn btn-primary" id="btn-save-tx">Save</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('transaction-modal')">Cancel</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script src="app.js"></script>
