@@ -20,6 +20,9 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long userId;
 
+    @Column(nullable = false)
+    private Long companyId;
+
     @NotBlank(message = "Username cannot be empty")
     @Column(nullable = false)
     private String userName;

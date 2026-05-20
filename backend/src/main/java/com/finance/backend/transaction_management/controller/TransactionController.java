@@ -26,7 +26,8 @@ public class TransactionController implements TransactionsApi{
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<TransactionDto> addTransaction(TransactionDto transactionDto) {
         long userId = securityUtils.getUserId();
-        return ResponseEntity.ok(transactionService.addTransaction(transactionDto,userId));
+        long companyId = securityUtils.getCompanyId();
+        return ResponseEntity.ok(transactionService.addTransaction(transactionDto,userId,companyId));
     }
 
     @Override
@@ -45,13 +46,14 @@ public class TransactionController implements TransactionsApi{
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN','VIEWER','ANALYST')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','VIEWER','ANALYST')")
     public ResponseEntity<List<TransactionDto>> getAllTransactions(TransactionType type, Category category,
                                                                    LocalDate startDate, LocalDate endDate,
                                                                    String sortBy, String sortDir, Integer page, Integer size) {
 
         long userId = securityUtils.getUserId();
-        return ResponseEntity.ok(transactionService.getAllTransaction(userId,type,category,startDate,endDate,sortBy,sortDir,page,size));
+        long companyId=securityUtils.getCompanyId();
+        return ResponseEntity.ok(transactionService.getAllTransaction(userId,companyId,type,category,startDate,endDate,sortBy,sortDir,page,size));
 
     }
 
@@ -59,8 +61,8 @@ public class TransactionController implements TransactionsApi{
     @Override
     @PreAuthorize("hasAnyAuthority('VIEWER', 'ANALYST', 'ADMIN')")
     public ResponseEntity<TransactionDto> getTransactionById(Long id) {
-        long userId = securityUtils.getUserId();
-        return ResponseEntity.ok(transactionService.getTransactionById(userId,id));
+        long companyId = securityUtils.getCompanyId();
+        return ResponseEntity.ok(transactionService.getTransactionById(companyId,id));
     }
 
     @Override

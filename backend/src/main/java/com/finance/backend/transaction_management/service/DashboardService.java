@@ -18,11 +18,13 @@ public class DashboardService {
 
     private final TransactionMapper transactionMapper;
 
-    public DashboardSummaryDto getDashboardSummary(Long userId) {
+    public DashboardSummaryDto getDashboardSummary(Long companyId) {
 
-        double income = transactionRepository.getIncomeSum(userId);
-        double expenses = transactionRepository.getExpenseSum(userId);
+        Double incomeSum = transactionRepository.getIncomeSum(companyId);
+        Double expenseSum = transactionRepository.getExpenseSum(companyId);
 
+        double income = incomeSum != null ? incomeSum : 0.0;
+        double expenses = expenseSum != null ? expenseSum : 0.0;
         double netBalance = income - expenses;
 
         return new DashboardSummaryDto()

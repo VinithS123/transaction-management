@@ -19,22 +19,37 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
 
     boolean existsByUserIdAndId(long userId, long id);
 
+    Optional<TransactionEntity> findByCompanyIdAndId(long userId, long id);
+
     Optional<TransactionEntity> findByUserIdAndId(long userId, long id);
 
-    @Query("SELECT SUM(t.amount) FROM TransactionEntity t WHERE t.userId = :userId AND t.type = 'INCOME'")
-    Double getIncomeSum(@Param("userId") Long userId);
+    @Query("""
+    SELECT SUM(t.amount)
+    FROM TransactionEntity t
+    WHERE t.companyId = :companyId
+    AND t.type = 'INCOME'
+    """)
+    Double getIncomeSum(@Param("companyId") Long companyId);
 
-    @Query("SELECT SUM(t.amount) FROM TransactionEntity t WHERE t.userId = :userId AND t.type = 'EXPENSE'")
-    Double getExpenseSum(@Param("userId") Long userId);
+    @Query("""
+    SELECT SUM(t.amount)
+    FROM TransactionEntity t
+    WHERE t.companyId = :companyId
+    AND t.type = 'EXPENSE'
+    """)
+    Double getExpenseSum(@Param("companyId") Long companyId);
 
-    @Query("SELECT t FROM TransactionEntity t " +
-            "WHERE t.userId = :userId AND " +
-            "(cast(:type as String) IS NULL OR t.type = :type) AND " +
-            "(cast(:category as String) IS NULL OR t.category = :category) AND " +
-            "(cast(:startDate as date) IS NULL OR t.recordDate >= :startDate) AND " +
-            "(cast(:endDate as date) IS NULL OR t.recordDate <= :endDate)")
+    @Query("""
+    SELECT t FROM TransactionEntity t
+    WHERE t.companyId = :companyId
+    AND (:type IS NULL OR t.type = :type)
+    AND (:category IS NULL OR t.category = :category)
+    AND (:startDate IS NULL OR t.recordDate >= :startDate)
+    AND (:endDate IS NULL OR t.recordDate <= :endDate)
+    """)
     Page<TransactionEntity> findWithFilters(
             @Param("userId") Long userId,
+            @Param("companyId") Long companyId,
             @Param("type") TransactionType type,
             @Param("category") Category category,
             @Param("startDate") LocalDate startDate,

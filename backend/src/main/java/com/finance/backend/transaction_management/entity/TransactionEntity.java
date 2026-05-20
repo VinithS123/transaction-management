@@ -25,6 +25,9 @@ public class TransactionEntity {
     private Long userId;
 
     @Column(nullable = false)
+    private Long companyId;
+
+    @Column(nullable = false)
     private Double amount;
 
     @Enumerated(EnumType.STRING)

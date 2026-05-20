@@ -40,6 +40,8 @@ public class JwtService {
 
         claims.put("role", userEntity.getRole().name());
 
+        claims.put("companyId", userEntity.getCompanyId());
+
         return Jwts.builder()
                 .claims()
                 .add(claims)

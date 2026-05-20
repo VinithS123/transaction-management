@@ -2,7 +2,7 @@ const BASE_URL = 'https://transaction-management-vq47.onrender.com/api/v1';
 
 // State Management
 let currentToken = localStorage.getItem('token');
-let userRole = 'VIEWER'; // Default. Will be updated from JWT.
+let userRole = 'VIEWER';
 let currentPage = 0;
 let totalPages = 0;
 const pageSize = 10;
@@ -28,18 +28,92 @@ function toggleLoader(show, message = 'Loading...') {
     else loader.classList.add('hidden');
 }
 
-// Wrapper to handle API calls with JWT and Slow Server detection
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+function hasAnalyticsAccess() {
+    return userRole === 'ADMIN' || userRole === 'ANALYST';
+}
+
+function hasDashboardAccess() {
+    return userRole === 'ADMIN' || userRole === 'ANALYST' || userRole === 'VIEWER';
+}
+
+function isAdmin() {
+    return userRole === 'ADMIN';
+}
+
+function normalizeRole(value) {
+    return String(value ?? 'VIEWER')
+        .replace(/^ROLE_/i, '')
+        .trim()
+        .toUpperCase();
+}
+
+function decodeJwtPayload(token) {
+    if (!token) return null;
+    try {
+        const base64Url = token.split('.')[1];
+        if (!base64Url) return null;
+
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+        return JSON.parse(atob(padded));
+    } catch (e) {
+        console.error("Failed to decode token:", e);
+        return null;
+    }
+}
+
+function isTokenExpired(token) {
+    const payload = decodeJwtPayload(token);
+    if (!payload?.exp) return false;
+    return payload.exp * 1000 <= Date.now();
+}
+
+function formatCurrency(value) {
+    const amount = Number(value);
+    return `$${Number.isFinite(amount) ? amount.toFixed(2) : '0.00'}`;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * Core API wrapper.
+ * Includes 'silent403' option to prevent annoying toasts during background fetches/filters.
+ */
 async function apiCall(endpoint, options = {}) {
-    const headers = { 'Content-Type': 'application/json', ...options.headers };
-    if (currentToken) headers['Authorization'] = `Bearer ${currentToken}`;
+    const { silent403, ...fetchOptions } = options;
+    const headers = { 'Content-Type': 'application/json', ...fetchOptions.headers };
 
-    const config = { ...options, headers };
+    const isAuthRoute = endpoint.includes('/login') || endpoint.includes('/signin');
 
-    let isSlow = false;
+    if (currentToken && !isAuthRoute) {
+        if (isTokenExpired(currentToken)) {
+            logout();
+            throw new Error("Session expired. Please login again.");
+        }
+
+        headers['Authorization'] = `Bearer ${currentToken}`;
+    }
+
+    const config = { ...fetchOptions, headers };
+
     const slowTimer = setTimeout(() => {
-        isSlow = true;
         toggleLoader(true, "Server is waking up, please wait...");
-    }, 2000);
+    }, 2500);
 
     toggleLoader(true);
 
@@ -48,36 +122,71 @@ async function apiCall(endpoint, options = {}) {
         clearTimeout(slowTimer);
         toggleLoader(false);
 
-        if (response.status === 401 || response.status === 403) {
+        // 401 = invalid/expired token -> clear session
+        if (response.status === 401 && !isAuthRoute) {
             logout();
-            throw new Error("unauthorized");
+            throw new Error("Session expired. Please login again.");
         }
 
-        if (response.status === 204) return null; // Used for DELETE
+        // 403 = forbidden -> flag the error
+        if (response.status === 403 && !isAuthRoute) {
+            const error = new Error("Access denied. You don't have permission for this action.");
+            error.status = 403;
+            throw error;
+        }
+
+        if (response.status === 204) return null;
 
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-            throw new Error("failed");
+            const errorMsg = data.message || data.error || data.details || `Server Error: ${response.status}`;
+            throw new Error(errorMsg);
         }
+
         return data;
     } catch (error) {
         clearTimeout(slowTimer);
         toggleLoader(false);
-        // Displaying a generic error message as requested
-        showToast("An error occurred.", 'error');
+
+        // If it's a 403 and we specifically asked to silence it (e.g., filter changes)
+        if (error.status === 403 && silent403) {
+            console.warn(`403 Forbidden suppressed for endpoint: ${endpoint}`);
+        } else {
+            // Show toast for all other errors, or for 403s on direct actions (like Save/Delete)
+            showToast(error.message, 'error');
+        }
+
         throw error;
     }
 }
 
-// Very basic JWT decode to grab the Role embedded in the token payload
+/**
+ * Extracts the user role from the JWT token.
+ * Safely handles string, array, and object formats (e.g., from Spring Boot).
+ */
 function extractRoleFromToken(token) {
     if (!token) return 'VIEWER';
     try {
-        const payloadStr = atob(token.split('.')[1]);
-        const payload = JSON.parse(payloadStr);
-        return payload.role || payload.roles || payload.authorities || 'VIEWER';
+        const payload = decodeJwtPayload(token);
+        if (!payload) return 'VIEWER';
+
+        // Find the role field (different frameworks use different standard names)
+        let r = payload.role || payload.roles || payload.authorities || 'VIEWER';
+
+        // If it's an array (e.g., ["ROLE_ADMIN"] or [{"authority": "ROLE_ADMIN"}]), grab the first item
+        if (Array.isArray(r)) {
+            r = r[0];
+        }
+
+        // If it's an object (e.g., Spring Boot's { authority: "ROLE_ADMIN" }), extract the text value
+        if (typeof r === 'object' && r !== null) {
+            r = r.authority || r.name || r.role || r.value || 'VIEWER';
+        }
+
+        return normalizeRole(r);
     } catch (e) {
+        console.error("Failed to parse token role:", e);
         return 'VIEWER';
     }
 }
@@ -85,12 +194,41 @@ function extractRoleFromToken(token) {
 // --- INITIALIZATION & AUTH ---
 
 function init() {
+    setupDynamicFilters();
+
     if (currentToken) {
+        if (isTokenExpired(currentToken)) {
+            showToast("Session expired. Please login again.", "error");
+            logout();
+            return;
+        }
+
         userRole = extractRoleFromToken(currentToken);
         showApp();
     } else {
         showAuth();
     }
+}
+
+function setupDynamicFilters() {
+    const searchInput = document.getElementById('search-keyword');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => {
+            currentPage = 0;
+            loadTransactions();
+        }, 500));
+    }
+
+    const filterIds = ['filter-type', 'filter-category', 'filter-start', 'filter-end'];
+    filterIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', () => {
+                currentPage = 0;
+                loadTransactions();
+            });
+        }
+    });
 }
 
 function showAuth() {
@@ -125,6 +263,10 @@ function switchAuthTab(tab) {
 
 async function handleLogin(e) {
     e.preventDefault();
+
+    currentToken = null;
+    localStorage.removeItem('token');
+
     const userName = document.getElementById('login-username').value;
     const userPassword = document.getElementById('login-password').value;
 
@@ -133,14 +275,22 @@ async function handleLogin(e) {
             method: 'POST',
             body: JSON.stringify({ userName, userPassword })
         });
-        if (res.token) {
-            localStorage.setItem('token', res.token);
-            currentToken = res.token;
-            userRole = extractRoleFromToken(res.token);
-            showToast("Login Successful");
-            showApp();
+
+        if (!res || !res.token) {
+            showToast("Login failed: no token received.", 'error');
+            return;
         }
-    } catch (err) { console.error("Login failed"); }
+
+        localStorage.setItem('token', res.token);
+        currentToken = res.token;
+        userRole = extractRoleFromToken(res.token);
+
+        showToast("Login Successful");
+        showApp();
+
+    } catch (err) {
+        console.error("Login process failed", err);
+    }
 }
 
 async function handleRegister(e) {
@@ -158,33 +308,38 @@ async function handleRegister(e) {
             method: 'POST',
             body: JSON.stringify(payload)
         });
-        showToast("Registration Successful");
+        showToast("Registration Successful! Please login.");
         switchAuthTab('login');
-    } catch (err) { console.error("Registration failed"); }
+    } catch (err) {
+        console.error("Registration process failed", err);
+    }
 }
 
 // --- UI / ROLE LOGIC ---
 
 function applyRolePermissions() {
-    // 1. Admin controls (Add/Edit/Delete buttons)
     const adminElements = document.querySelectorAll('.admin-only');
     adminElements.forEach(el => {
-        if (userRole === 'ADMIN') el.classList.remove('hidden');
-        else el.classList.add('hidden'); // Hidden for both Analyst and Viewer
+        if (isAdmin()) el.classList.remove('hidden');
+        else el.classList.add('hidden');
     });
 
-    // 2. Dashboard Analytics Access
     const analyticsNav = document.getElementById('nav-analytics');
-    if (userRole === 'VIEWER') {
-        analyticsNav.classList.add('hidden'); // Hide analytics tab for Viewer
+    if (hasDashboardAccess()) {
+        analyticsNav.classList.remove('hidden');
     } else {
-        analyticsNav.classList.remove('hidden'); // Show for Admin and Analyst
+        analyticsNav.classList.add('hidden');
     }
+
+    const analyticsElements = document.querySelectorAll('.analytics-only');
+    analyticsElements.forEach(el => {
+        if (hasAnalyticsAccess()) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+    });
 }
 
 function switchAppTab(tab) {
-    // Prevent viewers from navigating to analytics programmatically
-    if (tab === 'analytics' && userRole === 'VIEWER') {
+    if (tab === 'analytics' && !hasDashboardAccess()) {
         showToast("Access Denied", "error");
         return;
     }
@@ -208,13 +363,18 @@ function closeModal(modalId) {
 // --- TRANSACTIONS MODULE ---
 
 async function loadTransactions() {
-    const search = document.getElementById('search-keyword').value;
+    const search = document.getElementById('search-keyword').value.trim();
     const type = document.getElementById('filter-type').value;
     const category = document.getElementById('filter-category').value;
     const start = document.getElementById('filter-start').value;
     const end = document.getElementById('filter-end').value;
 
-    let queryParams = new URLSearchParams({ page: currentPage, size: pageSize, sortBy: 'recordDate', sortDir: 'DESC' });
+    let queryParams = new URLSearchParams({
+        page: currentPage,
+        size: pageSize,
+        sortBy: 'recordDate',
+        sortDir: 'DESC'
+    });
 
     if (type) queryParams.append('type', type);
     if (category) queryParams.append('category', category);
@@ -228,22 +388,26 @@ async function loadTransactions() {
     }
 
     try {
-        const data = await apiCall(endpoint);
-        const transactions = Array.isArray(data) ? data : (data.content || []);
+        // Pass silent403: true to stop toast popups on filter changes
+        const data = await apiCall(endpoint, { silent403: true });
+        const transactions = Array.isArray(data) ? data : (data?.content || []);
         renderTransactionsTable(transactions);
 
-        if (transactions.length < pageSize && currentPage === 0) totalPages = 1;
         document.getElementById('page-info').textContent = `Page ${currentPage + 1}`;
         document.getElementById('btn-prev').disabled = currentPage === 0;
         document.getElementById('btn-next').disabled = transactions.length < pageSize;
-    } catch (e) { console.error("Failed to load transactions"); }
+    } catch (e) {
+        console.error("Data load failed", e);
+        // Safely clear table if the user is completely restricted
+        renderTransactionsTable([]);
+    }
 }
 
 function renderTransactionsTable(transactions) {
     const tbody = document.getElementById('transactions-body');
     tbody.innerHTML = '';
 
-    if (transactions.length === 0) {
+    if (!transactions || transactions.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No transactions found</td></tr>';
         return;
     }
@@ -251,26 +415,27 @@ function renderTransactionsTable(transactions) {
     transactions.forEach(tx => {
         const tr = document.createElement('tr');
         const typeClass = tx.type === 'INCOME' ? 'type-income' : 'type-expense';
+        const txId = Number(tx.id);
+        const safeId = Number.isFinite(txId) ? txId : '';
 
         let actionsHtml = `<div class="menu-container">
-            <button class="menu-btn">⋮</button>
+            <button class="menu-btn" aria-label="Transaction actions">&#8942;</button>
             <div class="menu-content">
-                <a onclick="viewTransaction(${tx.id})">View</a>`;
+                <a onclick="viewTransaction(${safeId})">View</a>`;
 
-        // Only Admin gets Edit/Delete options in the menu
-        if (userRole === 'ADMIN') {
+        if (isAdmin()) {
             actionsHtml += `
-                <a onclick="editTransaction(${tx.id})">Edit</a>
-                <a onclick="deleteTransaction(${tx.id})" style="color:var(--error-color)">Delete</a>`;
+                <a onclick="editTransaction(${safeId})">Edit</a>
+                <a onclick="deleteTransaction(${safeId})" style="color:var(--error-color)">Delete</a>`;
         }
         actionsHtml += `</div></div>`;
 
         tr.innerHTML = `
-            <td>${tx.recordDate}</td>
-            <td class="${typeClass}"><b>${tx.type}</b></td>
-            <td>${tx.category}</td>
-            <td>$${tx.amount.toFixed(2)}</td>
-            <td>${tx.description || '-'}</td>
+            <td>${escapeHtml(tx.recordDate || '-')}</td>
+            <td class="${typeClass}"><b>${escapeHtml(tx.type || '-')}</b></td>
+            <td>${escapeHtml(tx.category || '-')}</td>
+            <td>${formatCurrency(tx.amount)}</td>
+            <td>${escapeHtml(tx.description || '-')}</td>
             <td>${actionsHtml}</td>
         `;
         tbody.appendChild(tr);
@@ -284,6 +449,11 @@ function changePage(direction) {
 }
 
 function openTransactionModal(tx = null, isViewOnly = false) {
+    if (!isViewOnly && !isAdmin()) {
+        showToast("Only admins can add or edit transactions.", "error");
+        return;
+    }
+
     document.getElementById('transaction-modal').classList.remove('hidden');
     const form = document.getElementById('transaction-form');
     const title = document.getElementById('modal-title');
@@ -328,7 +498,7 @@ async function editTransaction(id) {
 }
 
 async function deleteTransaction(id) {
-    if (!confirm("Are you sure you want to delete this transaction?")) return;
+    if (!confirm("Confirm Delete?")) return;
     try {
         await apiCall(`/transactions/${id}`, { method: 'DELETE' });
         showToast("Transaction Deleted");
@@ -338,6 +508,11 @@ async function deleteTransaction(id) {
 
 async function saveTransaction(e) {
     e.preventDefault();
+    if (!isAdmin()) {
+        showToast("Only admins can save transactions.", "error");
+        return;
+    }
+
     const id = document.getElementById('tx-id').value;
     const payload = {
         amount: parseFloat(document.getElementById('tx-amount').value),
@@ -349,7 +524,7 @@ async function saveTransaction(e) {
 
     try {
         if (id) {
-            await apiCall(`/transactions/${id}`, { method: 'PUT', body: JSON.stringify({id: parseInt(id), ...payload}) });
+            await apiCall(`/transactions/${id}`, { method: 'PUT', body: JSON.stringify({ id: parseInt(id), ...payload }) });
             showToast("Transaction Updated");
         } else {
             await apiCall(`/transactions`, { method: 'POST', body: JSON.stringify(payload) });
@@ -364,33 +539,40 @@ async function saveTransaction(e) {
 
 async function loadAnalytics() {
     try {
-        const summary = await apiCall('/dashboard/summary');
-        document.getElementById('sum-income').textContent = `$${summary.totalIncome.toFixed(2)}`;
-        document.getElementById('sum-income').style.color = 'var(--secondary-color)';
-        document.getElementById('sum-expenses').textContent = `$${summary.totalExpenses.toFixed(2)}`;
-        document.getElementById('sum-expenses').style.color = 'var(--error-color)';
-        document.getElementById('sum-balance').textContent = `$${summary.netBalance.toFixed(2)}`;
+        // Passed silent403: true to stop toast popups
+        const summary = await apiCall('/dashboard/summary', { silent403: true });
+        if(summary) {
+            document.getElementById('sum-income').textContent = formatCurrency(summary.totalIncome);
+            document.getElementById('sum-expenses').textContent = formatCurrency(summary.totalExpenses);
+            document.getElementById('sum-balance').textContent = formatCurrency(summary.netBalance);
+        }
 
-        const recent = await apiCall('/dashboard/recent');
+        const recent = await apiCall('/dashboard/recent', { silent403: true });
         const list = document.getElementById('recent-list');
         list.innerHTML = '';
-        recent.forEach(tx => {
-            const li = document.createElement('li');
-            const color = tx.type === 'INCOME' ? 'var(--secondary-color)' : 'var(--error-color)';
-            li.innerHTML = `
-                <span>${tx.category} (${tx.recordDate})</span>
-                <strong style="color:${color}">${tx.type === 'INCOME' ? '+' : '-'}$${tx.amount.toFixed(2)}</strong>
-            `;
-            list.appendChild(li);
-        });
+        if(recent) {
+            recent.forEach(tx => {
+                const li = document.createElement('li');
+                const color = tx.type === 'INCOME' ? 'var(--secondary-color)' : 'var(--error-color)';
+                li.innerHTML = `
+                    <span>${escapeHtml(tx.category || '-')} (${escapeHtml(tx.recordDate || '-')})</span>
+                    <strong style="color:${color}">${tx.type === 'INCOME' ? '+' : '-'}${formatCurrency(tx.amount)}</strong>
+                `;
+                list.appendChild(li);
+            });
+        }
 
-        const categoryData = await apiCall('/dashboard/category');
-        renderCategoryChart(categoryData);
+        if (!hasAnalyticsAccess()) {
+            return;
+        }
 
-        const trendData = await apiCall('/dashboard/monthly');
-        renderMonthlyChart(trendData);
+        const categoryData = await apiCall('/dashboard/category', { silent403: true });
+        if(categoryData) renderCategoryChart(categoryData);
 
-    } catch(e) { console.error("Failed to load analytics"); }
+        const trendData = await apiCall('/dashboard/monthly', { silent403: true });
+        if(trendData) renderMonthlyChart(trendData);
+
+    } catch(e) { console.error("Analytics load failed", e); }
 }
 
 function renderCategoryChart(data) {
@@ -398,9 +580,7 @@ function renderCategoryChart(data) {
     if (categoryChartInstance) categoryChartInstance.destroy();
 
     const labels = data.map(d => d.category);
-    const amounts = data.map(d => d.totalAmount);
-
-    // Updated color array to accommodate more categories gracefully
+    const amounts = data.map(d => Number(d.totalAmount) || 0);
     const colors = ['#bb86fc', '#03dac6', '#cf6679', '#ffb74d', '#4dd0e1', '#81c784', '#e57373', '#ba68c8'];
 
     categoryChartInstance = new Chart(ctx, {
@@ -409,7 +589,10 @@ function renderCategoryChart(data) {
             labels: labels,
             datasets: [{ data: amounts, backgroundColor: colors, borderWidth: 0 }]
         },
-        options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: '#fff' } } } }
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'right', labels: { color: '#fff' } } }
+        }
     });
 }
 
@@ -418,8 +601,8 @@ function renderMonthlyChart(data) {
     if (monthlyChartInstance) monthlyChartInstance.destroy();
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const labels = data.map(d => `${monthNames[d.month-1]} ${d.year}`);
-    const profits = data.map(d => d.profit);
+    const labels = data.map(d => `${monthNames[d.month - 1] || 'Month'} ${d.year || ''}`.trim());
+    const profits = data.map(d => Number(d.profit) || 0);
 
     monthlyChartInstance = new Chart(ctx, {
         type: 'line',
@@ -429,7 +612,7 @@ function renderMonthlyChart(data) {
                 label: 'Profit',
                 data: profits,
                 borderColor: '#bb86fc',
-                backgroundColor: 'rgba(187, 134, 252, 0.2)',
+                backgroundColor: 'rgba(187, 134, 252, 0.1)',
                 borderWidth: 2,
                 fill: true,
                 tension: 0.3

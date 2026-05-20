@@ -18,4 +18,13 @@ public class SecurityUtils {
 
         throw new RuntimeException( "user not authenticated ");
     }
+    public long getCompanyId(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if((authentication!=null) && (authentication.getPrincipal() instanceof UserPrincipal user)){
+            return user.getCompanyId();
+        }
+
+        throw new RuntimeException( "Company not found");
+    }
 }

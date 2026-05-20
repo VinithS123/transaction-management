@@ -572,6 +572,9 @@ components:
         userPassword:
           type: string
           format: password
+        companyId:
+          type: integer
+          format: int64
         role:
           $ref: '#/components/schemas/RoleEnum'
         status:
@@ -591,6 +594,9 @@ components:
       type: object
       properties:
         userId:
+          type: integer
+          format: int64
+        companyId:
           type: integer
           format: int64
         userName:

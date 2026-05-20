@@ -78,7 +78,7 @@
 
     <div class="main-tabs">
         <button id="nav-transactions" class="active" onclick="switchAppTab('transactions')">Transactions</button>
-        <button id="nav-analytics" onclick="switchAppTab('analytics')">Dashboard Analytics</button>
+        <button id="nav-analytics" onclick="switchAppTab('analytics')">Dashboard</button>
     </div>
 
     <div class="app-content">
@@ -129,7 +129,7 @@
             </div>
         </div>
 
-        <!-- TAB 2: Dashboard Analytics -->
+        <!-- TAB 2: Dashboard -->
         <div id="analytics-tab" class="hidden">
             <div class="summary-cards">
                 <div class="card">
@@ -146,7 +146,7 @@
                 </div>
             </div>
 
-            <div class="charts-container">
+            <div class="charts-container analytics-only">
                 <div class="chart-card">
                     <h3>Expenses by Category</h3>
                     <canvas id="categoryChart"></canvas>

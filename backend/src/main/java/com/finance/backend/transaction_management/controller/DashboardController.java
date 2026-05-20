@@ -24,8 +24,8 @@ public class DashboardController implements DashboardApi {
     @PreAuthorize("hasAnyAuthority('VIEWER', 'ANALYST', 'ADMIN')")
     public ResponseEntity<DashboardSummaryDto> getDashboardSummary() {
 
-        Long userId = securityUtils.getUserId();
-        DashboardSummaryDto summaryDto = dashboardService.getDashboardSummary(userId);
+        Long companyId = securityUtils.getCompanyId();
+        DashboardSummaryDto summaryDto = dashboardService.getDashboardSummary(companyId);
         return ResponseEntity.ok(summaryDto);
 
     }

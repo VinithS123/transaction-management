@@ -27,13 +27,14 @@ public class TransactionService {
     private final TransactionMapper transactionMapper;
 
 
-    public TransactionDto addTransaction(TransactionDto transactionDto, long userId) {
+    public TransactionDto addTransaction(TransactionDto transactionDto, long userId,long companyId) {
 
         if(transactionDto.getRecordDate().isAfter(LocalDate.now())){
             throw new InvalidTransactionException("Invalid Date");
         }
         TransactionEntity record = transactionMapper.toTransactionEntity(transactionDto);
         record.setUserId(userId);
+        record.setCompanyId(companyId);
         return transactionMapper.toTransactionDto(repository.save(record));
     }
 
@@ -52,7 +53,7 @@ public class TransactionService {
         return transactionMapper.toTransactionDto(repository.save(record));
     }
 
-    public List<TransactionDto> getAllTransaction(Long userId, TransactionType type, Category category,
+    public List<TransactionDto> getAllTransaction(Long userId, Long companyId,TransactionType type, Category category,
                                                   LocalDate startDate, LocalDate endDate,
                                                   String sortBy, String sortDir, Integer page, Integer size) {
 
@@ -62,12 +63,12 @@ public class TransactionService {
         }
 
         Pageable pageable = PageRequest.of(page,size,sort);
-        List<TransactionEntity> TransactionList = repository.findWithFilters(userId,type,category,startDate,endDate,pageable).toList();
+        List<TransactionEntity> TransactionList = repository.findWithFilters(userId,companyId,type,category,startDate,endDate,pageable).toList();
         return transactionMapper.toTransactionDtoList(TransactionList);
     }
 
-    public TransactionDto getTransactionById(long userId, Long id) {
-        TransactionEntity transaction = repository.findByUserIdAndId(userId,id).orElseThrow(
+    public TransactionDto getTransactionById(long companyId, Long id) {
+        TransactionEntity transaction = repository.findByCompanyIdAndId(companyId,id).orElseThrow(
                 ()-> new TransactionNotFoundException(""));
         return transactionMapper.toTransactionDto(transaction);
     }
