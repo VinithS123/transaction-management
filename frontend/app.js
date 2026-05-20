@@ -8,6 +8,7 @@ let totalPages = 0;
 const pageSize = 10;
 let categoryChartInstance = null;
 let monthlyChartInstance = null;
+let activeTransactionMenu = null;
 
 // --- UTILITIES & HTTP CLIENT ---
 
@@ -295,13 +296,20 @@ async function handleLogin(e) {
 
 async function handleRegister(e) {
     e.preventDefault();
+    const companyId = Number(document.getElementById('reg-company-id').value);
     const payload = {
         userName: document.getElementById('reg-username').value,
         email: document.getElementById('reg-email').value,
+        companyId,
         userPassword: document.getElementById('reg-password').value,
         role: document.getElementById('reg-role').value,
         status: "ACTIVE"
     };
+
+    if (!Number.isInteger(companyId) || companyId <= 0) {
+        showToast("Company ID must be a positive number.", "error");
+        return;
+    }
 
     try {
         await apiCall('/signin', {
@@ -358,6 +366,46 @@ function switchAppTab(tab) {
 
 function closeModal(modalId) {
     document.getElementById(modalId).classList.add('hidden');
+}
+
+function closeTransactionMenu() {
+    if (activeTransactionMenu) {
+        activeTransactionMenu.remove();
+        activeTransactionMenu = null;
+    }
+}
+
+function toggleTransactionMenu(event, id) {
+    event.stopPropagation();
+    closeTransactionMenu();
+
+    const menu = document.createElement('div');
+    menu.className = 'menu-content menu-content-floating';
+    menu.innerHTML = `<button type="button" onclick="viewTransaction(${id})">View</button>`;
+
+    if (isAdmin()) {
+        menu.innerHTML += `
+            <button type="button" onclick="editTransaction(${id})">Edit</button>
+            <button type="button" class="danger-action" onclick="deleteTransaction(${id})">Delete</button>`;
+    }
+
+    document.body.appendChild(menu);
+
+    const buttonRect = event.currentTarget.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+    const margin = 8;
+    const left = Math.min(
+        Math.max(margin, buttonRect.right - menuRect.width),
+        window.innerWidth - menuRect.width - margin
+    );
+    const belowTop = buttonRect.bottom + margin;
+    const top = belowTop + menuRect.height > window.innerHeight - margin
+        ? Math.max(margin, buttonRect.top - menuRect.height - margin)
+        : belowTop;
+
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+    activeTransactionMenu = menu;
 }
 
 // --- TRANSACTIONS MODULE ---
@@ -418,17 +466,9 @@ function renderTransactionsTable(transactions) {
         const txId = Number(tx.id);
         const safeId = Number.isFinite(txId) ? txId : '';
 
-        let actionsHtml = `<div class="menu-container">
-            <button class="menu-btn" aria-label="Transaction actions">&#8942;</button>
-            <div class="menu-content">
-                <a onclick="viewTransaction(${safeId})">View</a>`;
-
-        if (isAdmin()) {
-            actionsHtml += `
-                <a onclick="editTransaction(${safeId})">Edit</a>
-                <a onclick="deleteTransaction(${safeId})" style="color:var(--error-color)">Delete</a>`;
-        }
-        actionsHtml += `</div></div>`;
+        const actionsHtml = `<div class="menu-container">
+            <button type="button" class="menu-btn" aria-label="Transaction actions" onclick="toggleTransactionMenu(event, ${safeId})">&#8942;</button>
+        </div>`;
 
         tr.innerHTML = `
             <td>${escapeHtml(tx.recordDate || '-')}</td>
@@ -443,6 +483,7 @@ function renderTransactionsTable(transactions) {
 }
 
 function changePage(direction) {
+    closeTransactionMenu();
     currentPage += direction;
     if (currentPage < 0) currentPage = 0;
     loadTransactions();
@@ -484,6 +525,7 @@ function openTransactionModal(tx = null, isViewOnly = false) {
 }
 
 async function viewTransaction(id) {
+    closeTransactionMenu();
     try {
         const tx = await apiCall(`/transactions/${id}`);
         openTransactionModal(tx, true);
@@ -491,6 +533,7 @@ async function viewTransaction(id) {
 }
 
 async function editTransaction(id) {
+    closeTransactionMenu();
     try {
         const tx = await apiCall(`/transactions/${id}`);
         openTransactionModal(tx, false);
@@ -498,6 +541,7 @@ async function editTransaction(id) {
 }
 
 async function deleteTransaction(id) {
+    closeTransactionMenu();
     if (!confirm("Confirm Delete?")) return;
     try {
         await apiCall(`/transactions/${id}`, { method: 'DELETE' });
@@ -630,4 +674,7 @@ function renderMonthlyChart(data) {
 }
 
 // Bootstrap
+document.addEventListener('click', closeTransactionMenu);
+window.addEventListener('resize', closeTransactionMenu);
+window.addEventListener('scroll', closeTransactionMenu, true);
 window.onload = init;

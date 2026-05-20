@@ -77,9 +77,10 @@ tr:hover { background: rgba(255,255,255,0.05); }
 .menu-container { position: relative; display: inline-block; }
 .menu-btn { background: none; border: none; color: var(--text-primary); font-size: 1.2em; cursor: pointer; padding: 0 5px; }
 .menu-content { display: none; position: absolute; right: 0; background: var(--surface-color); min-width: 120px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 1; border: 1px solid var(--border-color); border-radius: 4px; }
-.menu-container:hover .menu-content { display: block; }
-.menu-content a { color: var(--text-primary); padding: 10px 15px; text-decoration: none; display: block; cursor: pointer; }
-.menu-content a:hover { background: var(--border-color); }
+.menu-content-floating { display: block; position: fixed; right: auto; z-index: 10001; }
+.menu-content a, .menu-content button { width: 100%; background: none; border: 0; color: var(--text-primary); padding: 10px 15px; text-align: left; text-decoration: none; display: block; cursor: pointer; font: inherit; }
+.menu-content a:hover, .menu-content button:hover { background: var(--border-color); }
+.menu-content .danger-action { color: var(--error-color); }
 
 /* Pagination */
 .pagination { display: flex; justify-content: center; align-items: center; margin-top: 20px; gap: 15px; }
