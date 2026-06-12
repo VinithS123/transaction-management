@@ -9,6 +9,7 @@ import com.finance.transaction_management.dto.Category;
 import com.finance.transaction_management.dto.TransactionDto;
 import com.finance.transaction_management.dto.TransactionType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,7 @@ public class TransactionService {
     private final TransactionMapper transactionMapper;
 
 
+    @CacheEvict(value="dashboard", key="@securityUtils.getCompanyId()")
     public TransactionDto addTransaction(TransactionDto transactionDto, long userId,long companyId) {
 
         if(transactionDto.getRecordDate().isAfter(LocalDate.now())){
@@ -38,6 +40,7 @@ public class TransactionService {
         return transactionMapper.toTransactionDto(repository.save(record));
     }
 
+    @CacheEvict(value="dashboard", key="@securityUtils.getCompanyId()")
     public void deleteTransaction(long userId, long id) {
         if(!repository.existsByUserIdAndId(userId,id)){
             throw new TransactionNotFoundException("Transaction Not Found");
@@ -46,6 +49,7 @@ public class TransactionService {
 
     }
 
+    @CacheEvict(value="dashboard", key="@securityUtils.getCompanyId()")
     public TransactionDto editTransaction(TransactionDto transactionDto, long userId, long id) {
         TransactionEntity record = repository.findByUserIdAndId(userId,id).orElseThrow(
                 ()-> new TransactionNotFoundException("Transaction Not Found"));
@@ -87,5 +91,6 @@ public class TransactionService {
                 userId, keyword, type, category, startDate, endDate, pageable);
 
         return transactionMapper.toTransactionDtoList(transactions.toList());
+
     }
 }

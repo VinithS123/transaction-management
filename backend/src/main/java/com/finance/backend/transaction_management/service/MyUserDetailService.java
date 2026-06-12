@@ -17,7 +17,7 @@ public class MyUserDetailService implements UserDetailsService {
 
     final UsersRepo usersRepo;
 
-    final UserMapper userMapper;
+//    final UserMapper userMapper;
 
 //    final JwtService jwtService;
 

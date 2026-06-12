@@ -36,7 +36,6 @@ public class UserService {
                         loginRequest.getUserName(),
                         loginRequest.getUserPassword()));
 
-
         UserEntity realUser = usersRepo.findByUserName(loginRequest.getUserName());
 
         realUser.setActiveAt(LocalDateTime.now());

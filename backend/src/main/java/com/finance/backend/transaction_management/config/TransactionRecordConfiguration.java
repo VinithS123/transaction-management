@@ -17,7 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -39,7 +38,7 @@ public class TransactionRecordConfiguration {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/signin","/api/v1/login","/swagger-ui/**",
-                                "/v3/api-docs/**",
+                                "/v3/api-docs/**","/actuator/**",
                                 "/swagger-ui.html")
                         .permitAll()
                         .anyRequest().authenticated())
@@ -81,5 +80,15 @@ public class TransactionRecordConfiguration {
 
         return source;
     }
+
+//    @Bean
+//    public RedisCacheConfiguration cacheConfiguration() {
+//        return RedisCacheConfiguration.defaultCacheConfig()
+//                .serializeValuesWith(
+//                        RedisSerializationContext.SerializationPair.fromSerializer(
+//                                new GenericJackson2JsonRedisSerializer()
+//                        )
+//                );
+//    }
 }
 

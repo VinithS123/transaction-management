@@ -7,6 +7,8 @@ import com.finance.transaction_management.dto.Category;
 import com.finance.transaction_management.dto.TransactionDto;
 import com.finance.transaction_management.dto.TransactionType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,7 +58,6 @@ public class TransactionController implements TransactionsApi{
         return ResponseEntity.ok(transactionService.getAllTransaction(userId,companyId,type,category,startDate,endDate,sortBy,sortDir,page,size));
 
     }
-
 
     @Override
     @PreAuthorize("hasAnyAuthority('VIEWER', 'ANALYST', 'ADMIN')")

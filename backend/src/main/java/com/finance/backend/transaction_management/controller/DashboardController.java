@@ -6,6 +6,7 @@ import com.finance.transaction_management.api.DashboardApi;
 import com.finance.transaction_management.dto.DashboardSummaryDto;
 import com.finance.transaction_management.dto.TransactionDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,4 +37,5 @@ public class DashboardController implements DashboardApi {
         Long userId = securityUtils.getUserId();
         return ResponseEntity.ok(dashboardService.getRecentTransactions(userId));
     }
+
 }

@@ -6,6 +6,7 @@ import com.finance.backend.transaction_management.repository.TransactionReposito
 import com.finance.transaction_management.dto.DashboardSummaryDto;
 import com.finance.transaction_management.dto.TransactionDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class DashboardService {
 
     private final TransactionMapper transactionMapper;
 
+    @Cacheable(value="dashboard", key="@securityUtils.getCompanyId()")
     public DashboardSummaryDto getDashboardSummary(Long companyId) {
 
         Double incomeSum = transactionRepository.getIncomeSum(companyId);
@@ -33,6 +35,7 @@ public class DashboardService {
                 .netBalance(netBalance);
     }
 
+    @Cacheable(value="dashboard", key="@securityUtils.getCompanyId()")
     public List<TransactionDto> getRecentTransactions(Long userId) {
 
         List<TransactionEntity> recentEntities = transactionRepository.getRecentTransactionsExplicitQuery(userId);
